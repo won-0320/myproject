@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>모둠 나누기</title>
+    <style>
+        /* 전역 스타일 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        /* 헤더 */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        /* 메인 콘텐츠 */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            padding: 40px;
+        }
+
+        /* 입력 섹션 */
+        .input-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+        }
+
+        .names-input {
+            flex: 2;
+            min-width: 400px;
+        }
+
+        .settings-panel {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .section-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .names-input .section-title::before {
+            content: "👥";
+            font-size: 1.4rem;
+        }
+
+        .settings-panel .section-title::before {
+            content: "⚙️";
+            font-size: 1.4rem;
+        }
+
+        /* 이름 입력 그리드 */
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #fff;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .input-group input:not(:placeholder-shown) {
+            border-color: #28a745;
+            background: linear-gradient(135deg, #f8fff9 0%, #e8f5e8 100%);
+        }
+
+        /* 설정 패널 */
+        .settings-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid #dee2e6;
+        }
+
+        .setting-group {
+            margin-bottom: 25px;
+        }
+
+        .setting-group label {
+            display: block;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .setting-group select,
+        .setting-group input[type="number"] {
+            width: 100%;
+            padding: 15px 18px;
+            border: 2px solid #ced4da;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .setting-group select:focus,
+        .setting-group input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        /* 통계 정보 */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(23, 162, 184, 0.3);
+        }
+
+        .stat-number {
+            display: block;
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+
+        /* 버튼 스타일 */
+        .button-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 18px 35px;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(40, 167, 69, 0.5);
+        }
+
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.4s, height 0.4s;
+        }
+
+        .btn:active::before {
+            width: 400px;
+            height: 400px;
+        }
+
+        /* 결과 섹션 */
+        .results-section {
+            margin-top: 40px;
+        }
+
+        .results-section .section-title::before {
+            content: "🎯";
+        }
+
+        .groups-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .group-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border: 3px solid transparent;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .group-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c);
+            background-size: 200% 100%;
+            animation: gradientShift 3s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .group-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            border-color: #667eea;
+        }
+
+        .group-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .group-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .group-count {
+            font-size: 0.9rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .member-list {
+            list-style: none;
+        }
+
+        .member-item {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            font-weight: 600;
+            color: #495057;
+            transition: all 0.3s ease;
+            position: relative;
+            animation: slideInUp 0.6s ease forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .member-item:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .member-item::before {
+            content: "👤";
+            margin-right: 8px;
+        }
+
+        @keyframes slideInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 빈 상태 */
+        .empty-state {
+            text-align: center;
+            color: #6c757d;
+            font-size: 1.1rem;
+            font-style: italic;
+            padding: 60px 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 20px;
+            border: 2px dashed #ced4da;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        /* 애니메이션 */
+        .shuffle-animation {
+            animation: shuffle 0.8s ease-in-out;
+        }
+
+        @keyframes shuffle {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(0.95) rotate(-2deg); }
+            75% { transform: scale(0.95) rotate(2deg); }
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 1024px) {
+            .input-section {
+                flex-direction: column;
+            }
+
+            .names-input {
+                min-width: unset;
+            }
+
+            .settings-panel {
+                min-width: unset;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.2rem;
+            }
+
+            .main-content {
+                padding: 20px;
+                gap: 30px;
+            }
+
+            .input-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+
+            .groups-container {
+                grid-template-columns: 1fr;
+            }
+
+            .button-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 25px 15px;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .main-content {
+                padding: 15px;
+            }
+
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🎲 모둠 나누기</h1>
+            <p>학생들을 랜덤하게 모둠으로 나누어 보세요!</p>
+        </header>
+
+        <main class="main-content">
+            <!-- 입력 섹션 -->
+            <section class="input-section">
+                <!-- 이름 입력 -->
+                <div class="names-input">
+                    <h2 class="section-title">학생 이름 입력</h2>
+                    <div class="input-grid" id="inputGrid">
+                        <!-- JavaScript로 동적 생성 -->
+                    </div>
+                </div>
+
+                <!-- 설정 패널 -->
+                <div class="settings-panel">
+                    <h2 class="section-title">모둠 설정</h2>
+                    <div class="settings-card">
+                        <div class="setting-group">
+                            <label for="groupCount">모둠 수</label>
+                            <select id="groupCount">
+                                <option value="2">2개 모둠</option>
+                                <option value="3">3개 모둠</option>
+                                <option value="4" selected>4개 모둠</option>
+                                <option value="5">5개 모둠</option>
+                                <option value="6">6개 모둠</option>
+                                <option value="7">7개 모둠</option>
+                                <option value="8">8개 모둠</option>
+                                <option value="10">10개 모둠</option>
+                            </select>
+                        </div>
+
+                        <div class="stats-container">
+                            <div class="stat-card">
+                                <span class="stat-number" id="studentCount">0</span>
+                                <span class="stat-label">참여 학생</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-number" id="avgPerGroup">0</span>
+                                <span class="stat-label">모둠당 평균</span>
+                            </div>
+                        </div>
+
+                        <div class="button-container">
+                            <button class="btn btn-primary" id="divideBtn">🎯 모둠 나누기</button>
+                            <button class="btn btn-secondary" id="redivideBtn" style="display: none;">🔄 다시 나누기</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 결과 섹션 -->
+            <section class="results-section">
+                <h2 class="section-title">모둠 나누기 결과</h2>
+                <div id="resultsContainer">
+                    <div class="empty-state">
+                        <div class="empty-icon">🏫</div>
+                        아직 모둠이 나뉘지 않았습니다.<br>
+                        학생 이름을 입력하고 "모둠 나누기" 버튼을 눌러주세요.
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // 전역 변수
+        let students = [];
+        let currentGroups = [];
+
+        // DOM 요소
+        const inputGrid = document.getElementById('inputGrid');
+        const groupCountSelect = document.getElementById('groupCount');
+        const divideBtn = document.getElementById('divideBtn');
+        const redivideBtn = document.getElementById('redivideBtn');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const studentCount = document.getElementById('studentCount');
+        const avgPerGroup = document.getElementById('avgPerGroup');
+
+        // 초기화
+        function init() {
+            createInputFields();
+            setupEventListeners();
+        }
+
+        // 입력 필드 생성
+        function createInputFields() {
+            inputGrid.innerHTML = '';
+
+            for (let i = 1; i <= 20; i++) {
+                const inputGroup = document.createElement('div');
+                inputGroup.className = 'input-group';
+
+                inputGroup.innerHTML = `
+                    <label for="student${i}">학생 ${i}</label>
+                    <input
+                        type="text"
+                        id="student${i}"
+                        placeholder="이름을 입력하세요"
+                        maxlength="15"
+                    >
+                `;
+
+                inputGrid.appendChild(inputGroup);
+            }
+        }
+
+        // 이벤트 리스너 설정
+        function setupEventListeners() {
+            divideBtn.addEventListener('click', divideIntoGroups);
+            redivideBtn.addEventListener('click', divideIntoGroups);
+            groupCountSelect.addEventListener('change', updateStats);
+
+            // 입력 필드 변경 감지
+            inputGrid.addEventListener('input', updateStats);
+
+            // Enter 키로 모둠 나누기
+            inputGrid.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    divideIntoGroups();
+                }
+            });
+        }
+
+        // 통계 업데이트
+        function updateStats() {
+            const inputs = inputGrid.querySelectorAll('input[type="text"]');
+            const filledInputs = Array.from(inputs).filter(input => input.value.trim() !== '');
+            const groupCount = parseInt(groupCountSelect.value);
+
+            studentCount.textContent = filledInputs.length;
+
+            if (filledInputs.length > 0) {
+                const avg = Math.ceil(filledInputs.length / groupCount);
+                avgPerGroup.textContent = avg;
+                divideBtn.disabled = false;
+            } else {
+                avgPerGroup.textContent = '0';
+                divideBtn.disabled = false; // 버튼은 항상 활성화
+            }
+        }
+
+        // 학생 이름 수집
+        function collectStudents() {
+            students = [];
+            const inputs = inputGrid.querySelectorAll('input[type="text"]');
+
+            inputs.forEach(input => {
+                const name = input.value.trim();
+                if (name !== '') {
+                    students.push(name);
+                }
+            });
+
+            return students.length > 0;
+        }
+
+        // 배열 섞기 (Fisher-Yates 알고리즘)
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // 모둠 나누기
+        function divideIntoGroups() {
+            // 학생 이름 수집
+            if (!collectStudents()) {
+                alert('최소 한 명의 학생 이름을 입력해 주세요!');
+                return;
+            }
+
+            const groupCount = parseInt(groupCountSelect.value);
+
+            // 모둠 수가 학생 수보다 많은 경우 확인
+            if (groupCount > students.length) {
+                alert(`${students.length}명의 학생으로는 ${groupCount}개 모둠을 만들 수 없습니다.\n모둠 수를 줄여주세요.`);
+                return;
+            }
+
+            // 학생 이름 섞기
+            const shuffledStudents = shuffleArray(students);
+
+            // 모둠 나누기
+            currentGroups = [];
+            for (let i = 0; i < groupCount; i++) {
+                currentGroups.push([]);
+            }
+
+            // 학생들을 순서대로 모둠에 배정
+            shuffledStudents.forEach((student, index) => {
+                const groupIndex = index % groupCount;
+                currentGroups[groupIndex].push(student);
+            });
+
+            // 애니메이션 효과
+            resultsContainer.classList.add('shuffle-animation');
+
+            setTimeout(() => {
+                displayResults();
+                resultsContainer.classList.remove('shuffle-animation');
+            }, 400);
+
+            // 버튼 상태 변경
+            redivideBtn.style.display = 'inline-block';
+        }
+
+        // 결과 표시
+        function displayResults() {
+            const groupsContainer = document.createElement('div');
+            groupsContainer.className = 'groups-container';
+
+            currentGroups.forEach((group, index) => {
+                const groupCard = document.createElement('div');
+                groupCard.className = 'group-card';
+
+                const groupHeader = document.createElement('div');
+                groupHeader.className = 'group-header';
+
+                const groupTitle = document.createElement('h3');
+                groupTitle.className = 'group-title';
+                groupTitle.textContent = `${index + 1}모둠`;
+
+                const groupCount = document.createElement('div');
+                groupCount.className = 'group-count';
+                groupCount.textContent = `${group.length}명`;
+
+                groupHeader.appendChild(groupTitle);
+                groupHeader.appendChild(groupCount);
+
+                const memberList = document.createElement('ul');
+                memberList.className = 'member-list';
+
+                group.forEach((student, memberIndex) => {
+                    const memberItem = document.createElement('li');
+                    memberItem.className = 'member-item';
+                    memberItem.textContent = student;
+                    memberItem.style.animationDelay = `${(index * group.length + memberIndex) * 0.1}s`;
+                    memberList.appendChild(memberItem);
+                });
+
+                groupCard.appendChild(groupHeader);
+                groupCard.appendChild(memberList);
+                groupsContainer.appendChild(groupCard);
+            });
+
+            resultsContainer.innerHTML = '';
+            resultsContainer.appendChild(groupsContainer);
+        }
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

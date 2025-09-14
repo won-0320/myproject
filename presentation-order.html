@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>발표 순서 추첨</title>
+    <style>
+        /* 전역 스타일 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        /* 헤더 */
+        .header {
+            background: linear-gradient(135deg, #4a90e2 0%, #7b68ee 100%);
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* 메인 콘텐츠 */
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            padding: 40px;
+        }
+
+        /* 입력 섹션 */
+        .input-section {
+            flex: 1;
+            min-width: 350px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: "✏️";
+            font-size: 1.3rem;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 500;
+            color: #555;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #fff;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .input-group input:not(:placeholder-shown) {
+            border-color: #28a745;
+            background: #f8fff9;
+        }
+
+        /* 버튼 영역 */
+        .button-area {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(74, 144, 226, 0.5);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #28a745 0%, #20963d 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.5);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s;
+        }
+
+        .btn:active::after {
+            width: 300px;
+            height: 300px;
+        }
+
+        /* 결과 섹션 */
+        .result-section {
+            flex: 1;
+            min-width: 350px;
+        }
+
+        .result-section .section-title::before {
+            content: "🎯";
+        }
+
+        .result-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 300px;
+            border: 2px dashed #dee2e6;
+            transition: all 0.3s ease;
+        }
+
+        .result-container.has-results {
+            border-color: #28a745;
+            background: linear-gradient(135deg, #f8fff9 0%, #e8f5e8 100%);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            margin-top: 50px;
+        }
+
+        .result-list {
+            list-style: none;
+        }
+
+        .result-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            animation: slideIn 0.5s ease forwards;
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        .result-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .result-number {
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .result-name {
+            flex: 1;
+            font-weight: 500;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* 통계 정보 */
+        .stats {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .stats-number {
+            font-size: 2rem;
+            font-weight: 700;
+            display: block;
+        }
+
+        .stats-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* 애니메이션 효과 */
+        .shuffle-animation {
+            animation: shuffle 0.6s ease-in-out;
+        }
+
+        @keyframes shuffle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(0.95); }
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+                padding: 20px;
+                gap: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .button-area {
+                justify-content: center;
+            }
+
+            .btn {
+                flex: 1;
+                min-width: 120px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 20px 15px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .main-content {
+                padding: 15px;
+            }
+
+            .result-item {
+                gap: 10px;
+            }
+
+            .result-number {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🎲 발표 순서 추첨</h1>
+            <p>발표자 이름을 입력하고 순서를 랜덤하게 뽑아보세요!</p>
+        </header>
+
+        <main class="main-content">
+            <!-- 입력 섹션 -->
+            <section class="input-section">
+                <h2 class="section-title">발표자 이름 입력</h2>
+
+                <div class="input-grid" id="inputGrid">
+                    <!-- JavaScript로 동적 생성 -->
+                </div>
+
+                <div class="button-area">
+                    <button class="btn btn-primary" id="shuffleBtn">🎯 순서 뽑기</button>
+                    <button class="btn btn-secondary" id="reshuffleBtn" style="display: none;">🔄 다시 뽑기</button>
+                </div>
+
+                <div class="stats" id="statsContainer" style="display: none;">
+                    <span class="stats-number" id="participantCount">0</span>
+                    <span class="stats-label">명이 참여합니다</span>
+                </div>
+            </section>
+
+            <!-- 결과 섹션 -->
+            <section class="result-section">
+                <h2 class="section-title">발표 순서 결과</h2>
+
+                <div class="result-container" id="resultContainer">
+                    <div class="empty-state" id="emptyState">
+                        아직 순서가 정해지지 않았습니다.<br>
+                        발표자 이름을 입력하고 "순서 뽑기" 버튼을 눌러주세요.
+                    </div>
+                    <ol class="result-list" id="resultList" style="display: none;">
+                        <!-- 결과가 여기에 표시됩니다 -->
+                    </ol>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // 전역 변수
+        let participants = [];
+        let currentOrder = [];
+
+        // DOM 요소
+        const inputGrid = document.getElementById('inputGrid');
+        const shuffleBtn = document.getElementById('shuffleBtn');
+        const reshuffleBtn = document.getElementById('reshuffleBtn');
+        const resultContainer = document.getElementById('resultContainer');
+        const resultList = document.getElementById('resultList');
+        const emptyState = document.getElementById('emptyState');
+        const statsContainer = document.getElementById('statsContainer');
+        const participantCount = document.getElementById('participantCount');
+
+        // 초기화
+        function init() {
+            createInputFields();
+            setupEventListeners();
+        }
+
+        // 입력 필드 생성
+        function createInputFields() {
+            inputGrid.innerHTML = '';
+
+            for (let i = 1; i <= 20; i++) {
+                const inputGroup = document.createElement('div');
+                inputGroup.className = 'input-group';
+
+                inputGroup.innerHTML = `
+                    <label for="participant${i}">발표자 ${i}</label>
+                    <input
+                        type="text"
+                        id="participant${i}"
+                        placeholder="이름을 입력하세요"
+                        maxlength="20"
+                    >
+                `;
+
+                inputGrid.appendChild(inputGroup);
+            }
+        }
+
+        // 이벤트 리스너 설정
+        function setupEventListeners() {
+            shuffleBtn.addEventListener('click', shuffleOrder);
+            reshuffleBtn.addEventListener('click', shuffleOrder);
+
+            // 입력 필드 변경 감지
+            inputGrid.addEventListener('input', updateParticipantCount);
+
+            // Enter 키로 순서 뽑기
+            inputGrid.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    shuffleOrder();
+                }
+            });
+        }
+
+        // 참가자 수 업데이트
+        function updateParticipantCount() {
+            const inputs = inputGrid.querySelectorAll('input[type="text"]');
+            const filledInputs = Array.from(inputs).filter(input => input.value.trim() !== '');
+
+            if (filledInputs.length > 0) {
+                statsContainer.style.display = 'block';
+                participantCount.textContent = filledInputs.length;
+                shuffleBtn.disabled = false;
+            } else {
+                statsContainer.style.display = 'none';
+                shuffleBtn.disabled = false; // 버튼은 활성화 상태 유지
+            }
+        }
+
+        // 참가자 이름 수집
+        function collectParticipants() {
+            participants = [];
+            const inputs = inputGrid.querySelectorAll('input[type="text"]');
+
+            inputs.forEach(input => {
+                const name = input.value.trim();
+                if (name !== '') {
+                    participants.push(name);
+                }
+            });
+
+            return participants.length > 0;
+        }
+
+        // 배열 섞기 (Fisher-Yates 알고리즘)
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // 순서 뽑기
+        function shuffleOrder() {
+            // 참가자 이름 수집
+            if (!collectParticipants()) {
+                alert('최소 한 명의 발표자 이름을 입력해 주세요!');
+                return;
+            }
+
+            // 순서 섞기
+            currentOrder = shuffleArray(participants);
+
+            // 애니메이션 효과
+            resultContainer.classList.add('shuffle-animation');
+
+            setTimeout(() => {
+                displayResults();
+                resultContainer.classList.remove('shuffle-animation');
+            }, 300);
+
+            // 버튼 상태 변경
+            reshuffleBtn.style.display = 'inline-block';
+            shuffleBtn.textContent = '🎯 순서 뽑기';
+        }
+
+        // 결과 표시
+        function displayResults() {
+            emptyState.style.display = 'none';
+            resultList.style.display = 'block';
+            resultContainer.classList.add('has-results');
+
+            resultList.innerHTML = '';
+
+            currentOrder.forEach((name, index) => {
+                const listItem = document.createElement('li');
+                listItem.className = 'result-item';
+                listItem.style.animationDelay = `${index * 0.1}s`;
+
+                listItem.innerHTML = `
+                    <div class="result-number">${index + 1}</div>
+                    <div class="result-name">${name}</div>
+                `;
+
+                resultList.appendChild(listItem);
+            });
+        }
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>리그전 경기 결과 관리</title>
+    <style>
+        /* 전역 스타일 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+
+        /* 헤더 */
+        .header {
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* 네비게이션 탭 */
+        .nav-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 3px solid #e9ecef;
+            overflow-x: auto;
+        }
+
+        .nav-tab {
+            flex: 1;
+            min-width: 120px;
+            padding: 15px 20px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #495057;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-tab.active {
+            background: white;
+            color: #4a90e2;
+            border-bottom: 3px solid #4a90e2;
+        }
+
+        .nav-tab:hover {
+            background: #e9ecef;
+            color: #4a90e2;
+        }
+
+        /* 컨트롤 패널 */
+        .control-panel {
+            padding: 30px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            align-items: end;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9rem;
+        }
+
+        .control-group input,
+        .control-group select {
+            padding: 12px 15px;
+            border: 2px solid #ced4da;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .control-group input:focus,
+        .control-group select:focus {
+            outline: none;
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* 탭 컨텐츠 */
+        .tab-content {
+            display: none;
+            padding: 30px;
+            min-height: 400px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 반별 입력 폼 */
+        .class-form {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .class-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .class-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4a90e2;
+        }
+
+        .student-count {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        /* 학생 테이블 */
+        .students-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .students-table th,
+        .students-table td {
+            padding: 12px 8px;
+            text-align: center;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .students-table th {
+            background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .students-table td {
+            vertical-align: middle;
+        }
+
+        .student-name-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .student-name-input:focus {
+            outline: none;
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.1);
+        }
+
+        .game-select {
+            width: 80px;
+            padding: 6px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            background: white;
+        }
+
+        .game-select.win {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .game-select.loss {
+            background: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+
+        .game-select.absent {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+
+        .total-points {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #4a90e2;
+            background: #e7f3ff;
+            border-radius: 6px;
+            padding: 8px;
+        }
+
+        /* 결과 테이블 */
+        .results-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 12px 10px;
+            text-align: center;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .results-table th {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .results-table .rank-1 {
+            background: #fff3cd;
+            color: #856404;
+            font-weight: 700;
+        }
+
+        .results-table .rank-2 {
+            background: #e2e3e5;
+            color: #495057;
+            font-weight: 600;
+        }
+
+        .results-table .rank-3 {
+            background: #f4cccc;
+            color: #721c24;
+            font-weight: 600;
+        }
+
+        /* 통계 카드 */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #4a90e2;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #4a90e2;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 1200px) {
+            .students-table,
+            .results-table {
+                font-size: 0.8rem;
+            }
+
+            .students-table th,
+            .students-table td,
+            .results-table th,
+            .results-table td {
+                padding: 8px 4px;
+            }
+
+            .game-select {
+                width: 70px;
+                font-size: 0.75rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .control-panel {
+                padding: 20px;
+            }
+
+            .control-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .tab-content {
+                padding: 15px;
+            }
+
+            .class-form {
+                padding: 15px;
+            }
+
+            .students-table,
+            .results-table {
+                font-size: 0.7rem;
+            }
+
+            .students-table th,
+            .students-table td,
+            .results-table th,
+            .results-table td {
+                padding: 6px 2px;
+            }
+
+            .student-name-input {
+                font-size: 0.8rem;
+                padding: 6px 8px;
+            }
+
+            .game-select {
+                width: 60px;
+                font-size: 0.7rem;
+                padding: 4px;
+            }
+
+            .nav-tabs {
+                flex-wrap: wrap;
+            }
+
+            .nav-tab {
+                flex: none;
+                min-width: 100px;
+                padding: 12px 15px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .students-table,
+            .results-table {
+                font-size: 0.65rem;
+            }
+
+            .btn {
+                font-size: 0.9rem;
+                padding: 10px 18px;
+            }
+
+            .stat-number {
+                font-size: 2rem;
+            }
+        }
+
+        /* 테이블 스크롤 */
+        .table-container {
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+            border-radius: 10px;
+        }
+
+        /* 로딩 스피너 */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4a90e2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 알림 메시지 */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 헤더 -->
+        <header class="header">
+            <h1>🏆 리그전 경기 결과 관리</h1>
+            <p>각 반별 학생들의 경기 결과를 입력하고 승점을 확인해보세요!</p>
+        </header>
+
+        <!-- 컨트롤 패널 -->
+        <div class="control-panel">
+            <div class="control-grid">
+                <div class="control-group">
+                    <label>전체 반 수</label>
+                    <select id="totalClasses">
+                        <option value="4">4개 반</option>
+                        <option value="6">6개 반</option>
+                        <option value="8" selected>8개 반</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <button class="btn btn-primary" id="calculateBtn">📊 승점 계산</button>
+                </div>
+                <div class="control-group">
+                    <button class="btn btn-success" id="exportCsvBtn">📁 CSV 다운로드</button>
+                </div>
+                <div class="control-group">
+                    <button class="btn btn-warning" id="saveDataBtn">💾 데이터 저장</button>
+                </div>
+                <div class="control-group">
+                    <button class="btn btn-warning" id="loadDataBtn">📂 데이터 불러오기</button>
+                </div>
+                <div class="control-group">
+                    <button class="btn btn-danger" id="resetBtn">🔄 전체 초기화</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 네비게이션 탭 -->
+        <nav class="nav-tabs" id="navTabs">
+            <!-- JavaScript로 동적 생성 -->
+        </nav>
+
+        <!-- 탭 컨텐츠 -->
+        <div id="tabContents">
+            <!-- JavaScript로 동적 생성 -->
+        </div>
+
+        <!-- 전체 결과 탭 -->
+        <div class="tab-content" id="resultsTab">
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalStudents">0</div>
+                    <div class="stat-label">전체 학생 수</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="avgPoints">0</div>
+                    <div class="stat-label">평균 승점</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="completedGames">0</div>
+                    <div class="stat-label">완료된 경기</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="participationRate">0%</div>
+                    <div class="stat-label">참가율</div>
+                </div>
+            </div>
+
+            <div class="results-section">
+                <h3>🏆 전체 순위</h3>
+                <div class="table-container">
+                    <table class="results-table" id="resultsTable">
+                        <thead>
+                            <tr>
+                                <th>순위</th>
+                                <th>반</th>
+                                <th>이름</th>
+                                <th>1경기</th>
+                                <th>2경기</th>
+                                <th>3경기</th>
+                                <th>4경기</th>
+                                <th>5경기</th>
+                                <th>총 승점</th>
+                                <th>참가율</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 결과 데이터가 여기에 표시됩니다 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수
+        let classData = {};
+        let totalClasses = 8;
+        let studentsPerClass = 20;
+
+        // 점수 계산 규칙
+        const POINTS = {
+            win: 3,
+            loss: 2,
+            absent: 0
+        };
+
+        // DOM 요소
+        const elements = {
+            totalClassesSelect: document.getElementById('totalClasses'),
+            calculateBtn: document.getElementById('calculateBtn'),
+            exportCsvBtn: document.getElementById('exportCsvBtn'),
+            saveDataBtn: document.getElementById('saveDataBtn'),
+            loadDataBtn: document.getElementById('loadDataBtn'),
+            resetBtn: document.getElementById('resetBtn'),
+            navTabs: document.getElementById('navTabs'),
+            tabContents: document.getElementById('tabContents'),
+            resultsTab: document.getElementById('resultsTab'),
+            resultsTable: document.getElementById('resultsTable'),
+            totalStudents: document.getElementById('totalStudents'),
+            avgPoints: document.getElementById('avgPoints'),
+            completedGames: document.getElementById('completedGames'),
+            participationRate: document.getElementById('participationRate')
+        };
+
+        // 초기화
+        function init() {
+            loadSavedData();
+            setupEventListeners();
+            createClassTabs();
+            showTab('class1');
+        }
+
+        // 이벤트 리스너 설정
+        function setupEventListeners() {
+            elements.totalClassesSelect.addEventListener('change', handleClassCountChange);
+            elements.calculateBtn.addEventListener('click', calculateAllPoints);
+            elements.exportCsvBtn.addEventListener('click', exportToCSV);
+            elements.saveDataBtn.addEventListener('click', saveData);
+            elements.loadDataBtn.addEventListener('click', loadData);
+            elements.resetBtn.addEventListener('click', resetAllData);
+        }
+
+        // 반 수 변경 처리
+        function handleClassCountChange() {
+            totalClasses = parseInt(elements.totalClassesSelect.value);
+            createClassTabs();
+            showTab('class1');
+        }
+
+        // 반별 탭 생성
+        function createClassTabs() {
+            // 네비게이션 탭 생성
+            elements.navTabs.innerHTML = '';
+
+            for (let i = 1; i <= totalClasses; i++) {
+                const tab = document.createElement('button');
+                tab.className = `nav-tab ${i === 1 ? 'active' : ''}`;
+                tab.textContent = `${i}반`;
+                tab.onclick = () => showTab(`class${i}`);
+                elements.navTabs.appendChild(tab);
+            }
+
+            // 결과 탭 추가
+            const resultsTabBtn = document.createElement('button');
+            resultsTabBtn.className = 'nav-tab';
+            resultsTabBtn.textContent = '전체 결과';
+            resultsTabBtn.onclick = () => showTab('results');
+            elements.navTabs.appendChild(resultsTabBtn);
+
+            // 탭 컨텐츠 생성
+            elements.tabContents.innerHTML = '';
+
+            for (let i = 1; i <= totalClasses; i++) {
+                const tabContent = createClassTabContent(i);
+                elements.tabContents.appendChild(tabContent);
+
+                // 클래스 데이터 초기화
+                if (!classData[`class${i}`]) {
+                    classData[`class${i}`] = {
+                        students: Array(studentsPerClass).fill().map(() => ({
+                            name: '',
+                            games: ['', '', '', '', ''],
+                            totalPoints: 0
+                        }))
+                    };
+                }
+            }
+        }
+
+        // 반별 탭 컨텐츠 생성
+        function createClassTabContent(classNum) {
+            const tabContent = document.createElement('div');
+            tabContent.className = `tab-content ${classNum === 1 ? 'active' : ''}`;
+            tabContent.id = `class${classNum}Tab`;
+
+            // 반별 인원 수 조절 컨트롤 추가
+            const classControl = document.createElement('div');
+            classControl.innerHTML = `
+                <div class="control-grid" style="margin-bottom: 20px;">
+                    <div class="control-group">
+                        <label>${classNum}반 학생 수</label>
+                        <select id="studentsCount${classNum}" onchange="updateStudentCount(${classNum}, this.value)">
+                            ${Array.from({length: 20}, (_, i) =>
+                                `<option value="${i + 1}" ${i + 1 === studentsPerClass ? 'selected' : ''}>${i + 1}명</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                </div>
+            `;
+
+            const classForm = document.createElement('div');
+            classForm.className = 'class-form';
+
+            const classHeader = document.createElement('div');
+            classHeader.className = 'class-header';
+            classHeader.innerHTML = `
+                <h2 class="class-title">${classNum}반</h2>
+                <span class="student-count" id="studentCount${classNum}">${studentsPerClass}명</span>
+            `;
+
+            const tableContainer = document.createElement('div');
+            tableContainer.className = 'table-container';
+
+            const table = document.createElement('table');
+            table.className = 'students-table';
+            table.id = `studentsTable${classNum}`;
+
+            // 테이블 헤더
+            const thead = document.createElement('thead');
+            thead.innerHTML = `
+                <tr>
+                    <th style="width: 120px;">학생 이름</th>
+                    <th style="width: 90px;">1경기</th>
+                    <th style="width: 90px;">2경기</th>
+                    <th style="width: 90px;">3경기</th>
+                    <th style="width: 90px;">4경기</th>
+                    <th style="width: 90px;">5경기</th>
+                    <th style="width: 100px;">총 승점</th>
+                </tr>
+            `;
+
+            // 테이블 바디
+            const tbody = document.createElement('tbody');
+            tbody.id = `studentsTableBody${classNum}`;
+
+            table.appendChild(thead);
+            table.appendChild(tbody);
+            tableContainer.appendChild(table);
+
+            classForm.appendChild(classHeader);
+            classForm.appendChild(tableContainer);
+
+            tabContent.appendChild(classControl);
+            tabContent.appendChild(classForm);
+
+            // 학생 행 생성
+            updateStudentRows(classNum);
+
+            return tabContent;
+        }
+
+        // 학생 수 업데이트
+        function updateStudentCount(classNum, count) {
+            const currentCount = classData[`class${classNum}`].students.length;
+            const newCount = parseInt(count);
+
+            if (newCount > currentCount) {
+                // 학생 추가
+                for (let i = currentCount; i < newCount; i++) {
+                    classData[`class${classNum}`].students.push({
+                        name: '',
+                        games: ['', '', '', '', ''],
+                        totalPoints: 0
+                    });
+                }
+            } else if (newCount < currentCount) {
+                // 학생 제거
+                classData[`class${classNum}`].students = classData[`class${classNum}`].students.slice(0, newCount);
+            }
+
+            document.getElementById(`studentCount${classNum}`).textContent = `${newCount}명`;
+            updateStudentRows(classNum);
+        }
+
+        // 학생 행 업데이트
+        function updateStudentRows(classNum) {
+            const tbody = document.getElementById(`studentsTableBody${classNum}`);
+            tbody.innerHTML = '';
+
+            classData[`class${classNum}`].students.forEach((student, index) => {
+                const row = document.createElement('tr');
+
+                // 이름 입력
+                const nameCell = document.createElement('td');
+                nameCell.innerHTML = `
+                    <input
+                        type="text"
+                        class="student-name-input"
+                        placeholder="학생 이름"
+                        value="${student.name}"
+                        onchange="updateStudentName('class${classNum}', ${index}, this.value)"
+                    >
+                `;
+
+                // 게임 결과 선택
+                const gameCells = [];
+                for (let i = 0; i < 5; i++) {
+                    const gameCell = document.createElement('td');
+                    gameCell.innerHTML = `
+                        <select
+                            class="game-select ${getGameResultClass(student.games[i])}"
+                            onchange="updateGameResult('class${classNum}', ${index}, ${i}, this.value)"
+                        >
+                            <option value="">-</option>
+                            <option value="win" ${student.games[i] === 'win' ? 'selected' : ''}>승</option>
+                            <option value="loss" ${student.games[i] === 'loss' ? 'selected' : ''}>패</option>
+                            <option value="absent" ${student.games[i] === 'absent' ? 'selected' : ''}>불참</option>
+                        </select>
+                    `;
+                    gameCells.push(gameCell);
+                }
+
+                // 총 승점
+                const totalCell = document.createElement('td');
+                totalCell.innerHTML = `<div class="total-points">${student.totalPoints}</div>`;
+
+                row.appendChild(nameCell);
+                gameCells.forEach(cell => row.appendChild(cell));
+                row.appendChild(totalCell);
+
+                tbody.appendChild(row);
+            });
+        }
+
+        // 게임 결과에 따른 CSS 클래스 반환
+        function getGameResultClass(result) {
+            switch(result) {
+                case 'win': return 'win';
+                case 'loss': return 'loss';
+                case 'absent': return 'absent';
+                default: return '';
+            }
+        }
+
+        // 학생 이름 업데이트
+        function updateStudentName(classKey, studentIndex, name) {
+            classData[classKey].students[studentIndex].name = name;
+        }
+
+        // 게임 결과 업데이트
+        function updateGameResult(classKey, studentIndex, gameIndex, result) {
+            classData[classKey].students[studentIndex].games[gameIndex] = result;
+
+            // 선택 박스 스타일 업데이트
+            const selectElement = event.target;
+            selectElement.className = `game-select ${getGameResultClass(result)}`;
+
+            // 개별 학생 승점 계산
+            calculateStudentPoints(classKey, studentIndex);
+        }
+
+        // 개별 학생 승점 계산
+        function calculateStudentPoints(classKey, studentIndex) {
+            const student = classData[classKey].students[studentIndex];
+            let totalPoints = 0;
+
+            student.games.forEach(result => {
+                if (POINTS[result]) {
+                    totalPoints += POINTS[result];
+                }
+            });
+
+            student.totalPoints = totalPoints;
+
+            // UI 업데이트
+            const classNum = classKey.replace('class', '');
+            const tbody = document.getElementById(`studentsTableBody${classNum}`);
+            const row = tbody.children[studentIndex];
+            const totalCell = row.lastElementChild;
+            totalCell.innerHTML = `<div class="total-points">${totalPoints}</div>`;
+        }
+
+        // 전체 승점 계산
+        function calculateAllPoints() {
+            elements.calculateBtn.innerHTML = '<span class="loading"></span>계산 중...';
+            elements.calculateBtn.disabled = true;
+
+            setTimeout(() => {
+                // 모든 학생의 승점 계산
+                Object.keys(classData).forEach(classKey => {
+                    classData[classKey].students.forEach((student, index) => {
+                        calculateStudentPoints(classKey, index);
+                    });
+                });
+
+                // 결과 테이블 업데이트
+                updateResultsTable();
+
+                // 통계 업데이트
+                updateStats();
+
+                elements.calculateBtn.innerHTML = '📊 승점 계산';
+                elements.calculateBtn.disabled = false;
+
+                // 성공 알림
+                showAlert('승점 계산이 완료되었습니다!', 'success');
+            }, 1000);
+        }
+
+        // 결과 테이블 업데이트
+        function updateResultsTable() {
+            const tbody = elements.resultsTable.querySelector('tbody');
+            tbody.innerHTML = '';
+
+            // 모든 학생 데이터 수집
+            const allStudents = [];
+            Object.keys(classData).forEach(classKey => {
+                const classNum = classKey.replace('class', '');
+                classData[classKey].students.forEach(student => {
+                    if (student.name.trim() !== '') {
+                        allStudents.push({
+                            ...student,
+                            class: classNum,
+                            participationRate: calculateParticipationRate(student.games)
+                        });
+                    }
+                });
+            });
+
+            // 승점 순으로 정렬
+            allStudents.sort((a, b) => {
+                if (b.totalPoints !== a.totalPoints) {
+                    return b.totalPoints - a.totalPoints;
+                }
+                return b.participationRate - a.participationRate;
+            });
+
+            // 테이블 행 생성
+            allStudents.forEach((student, index) => {
+                const row = document.createElement('tr');
+
+                // 순위에 따른 클래스 추가
+                if (index === 0) row.classList.add('rank-1');
+                else if (index === 1) row.classList.add('rank-2');
+                else if (index === 2) row.classList.add('rank-3');
+
+                row.innerHTML = `
+                    <td><strong>${index + 1}</strong></td>
+                    <td>${student.class}반</td>
+                    <td><strong>${student.name}</strong></td>
+                    <td>${getResultDisplay(student.games[0])}</td>
+                    <td>${getResultDisplay(student.games[1])}</td>
+                    <td>${getResultDisplay(student.games[2])}</td>
+                    <td>${getResultDisplay(student.games[3])}</td>
+                    <td>${getResultDisplay(student.games[4])}</td>
+                    <td><strong style="color: #4a90e2;">${student.totalPoints}</strong></td>
+                    <td>${student.participationRate}%</td>
+                `;
+
+                tbody.appendChild(row);
+            });
+        }
+
+        // 결과 표시 형식
+        function getResultDisplay(result) {
+            switch(result) {
+                case 'win': return '<span style="color: #28a745;">승</span>';
+                case 'loss': return '<span style="color: #ffc107;">패</span>';
+                case 'absent': return '<span style="color: #dc3545;">불참</span>';
+                default: return '-';
+            }
+        }
+
+        // 참가율 계산
+        function calculateParticipationRate(games) {
+            const playedGames = games.filter(game => game !== '' && game !== 'absent').length;
+            return Math.round((playedGames / 5) * 100);
+        }
+
+        // 통계 업데이트
+        function updateStats() {
+            const allStudents = [];
+            let totalGames = 0;
+            let totalPoints = 0;
+            let totalParticipation = 0;
+
+            Object.keys(classData).forEach(classKey => {
+                classData[classKey].students.forEach(student => {
+                    if (student.name.trim() !== '') {
+                        allStudents.push(student);
+                        totalPoints += student.totalPoints;
+
+                        student.games.forEach(game => {
+                            if (game !== '' && game !== 'absent') {
+                                totalGames++;
+                                totalParticipation++;
+                            } else if (game === 'absent') {
+                                totalGames++;
+                            }
+                        });
+                    }
+                });
+            });
+
+            elements.totalStudents.textContent = allStudents.length;
+            elements.avgPoints.textContent = allStudents.length > 0 ? Math.round(totalPoints / allStudents.length * 10) / 10 : 0;
+            elements.completedGames.textContent = totalGames;
+            elements.participationRate.textContent = totalGames > 0 ? Math.round((totalParticipation / totalGames) * 100) : 0;
+        }
+
+        // 탭 표시
+        function showTab(tabId) {
+            // 모든 탭 비활성화
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            // 선택된 탭 활성화
+            if (tabId === 'results') {
+                document.querySelector('.nav-tab:last-child').classList.add('active');
+                elements.resultsTab.classList.add('active');
+                updateResultsTable();
+                updateStats();
+            } else {
+                const tabButton = Array.from(elements.navTabs.children).find(tab =>
+                    tab.textContent === tabId.replace('class', '') + '반'
+                );
+                if (tabButton) tabButton.classList.add('active');
+
+                const tabContent = document.getElementById(tabId + 'Tab');
+                if (tabContent) tabContent.classList.add('active');
+            }
+        }
+
+        // CSV 내보내기
+        function exportToCSV() {
+            const allStudents = [];
+
+            Object.keys(classData).forEach(classKey => {
+                const classNum = classKey.replace('class', '');
+                classData[classKey].students.forEach(student => {
+                    if (student.name.trim() !== '') {
+                        allStudents.push({
+                            class: classNum,
+                            name: student.name,
+                            game1: student.games[0] || '-',
+                            game2: student.games[1] || '-',
+                            game3: student.games[2] || '-',
+                            game4: student.games[3] || '-',
+                            game5: student.games[4] || '-',
+                            totalPoints: student.totalPoints,
+                            participationRate: calculateParticipationRate(student.games)
+                        });
+                    }
+                });
+            });
+
+            // 승점 순 정렬
+            allStudents.sort((a, b) => b.totalPoints - a.totalPoints);
+
+            // CSV 데이터 생성
+            const csvData = [
+                ['순위', '반', '이름', '1경기', '2경기', '3경기', '4경기', '5경기', '총승점', '참가율'],
+                ...allStudents.map((student, index) => [
+                    index + 1,
+                    student.class + '반',
+                    student.name,
+                    student.game1,
+                    student.game2,
+                    student.game3,
+                    student.game4,
+                    student.game5,
+                    student.totalPoints,
+                    student.participationRate + '%'
+                ])
+            ];
+
+            // CSV 파일 다운로드
+            const csvContent = csvData.map(row => row.join(',')).join('\n');
+            const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+
+            link.setAttribute('href', url);
+            link.setAttribute('download', `리그전결과_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showAlert('CSV 파일이 다운로드되었습니다!', 'success');
+        }
+
+        // 데이터 저장
+        function saveData() {
+            try {
+                localStorage.setItem('leagueData', JSON.stringify({
+                    classData: classData,
+                    totalClasses: totalClasses,
+                    timestamp: new Date().toISOString()
+                }));
+                showAlert('데이터가 저장되었습니다!', 'success');
+            } catch (error) {
+                showAlert('데이터 저장에 실패했습니다.', 'danger');
+            }
+        }
+
+        // 데이터 불러오기
+        function loadData() {
+            try {
+                const savedData = localStorage.getItem('leagueData');
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    classData = data.classData;
+                    totalClasses = data.totalClasses;
+
+                    elements.totalClassesSelect.value = totalClasses;
+                    createClassTabs();
+                    showTab('class1');
+
+                    showAlert('데이터가 불러와졌습니다!', 'success');
+                } else {
+                    showAlert('저장된 데이터가 없습니다.', 'warning');
+                }
+            } catch (error) {
+                showAlert('데이터 불러오기에 실패했습니다.', 'danger');
+            }
+        }
+
+        // 저장된 데이터 로드 (초기화 시)
+        function loadSavedData() {
+            const savedData = localStorage.getItem('leagueData');
+            if (savedData) {
+                try {
+                    const data = JSON.parse(savedData);
+                    classData = data.classData || {};
+                    totalClasses = data.totalClasses || 8;
+                    elements.totalClassesSelect.value = totalClasses;
+                } catch (error) {
+                    console.error('저장된 데이터 로드 실패:', error);
+                }
+            }
+        }
+
+        // 전체 초기화
+        function resetAllData() {
+            if (confirm('모든 데이터를 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+                classData = {};
+                localStorage.removeItem('leagueData');
+                createClassTabs();
+                showTab('class1');
+                showAlert('모든 데이터가 초기화되었습니다.', 'warning');
+            }
+        }
+
+        // 알림 표시
+        function showAlert(message, type = 'success') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+
+            document.querySelector('.control-panel').appendChild(alertDiv);
+
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 3000);
+        }
+
+        // 전역 함수 노출
+        window.updateStudentCount = updateStudentCount;
+        window.updateStudentName = updateStudentName;
+        window.updateGameResult = updateGameResult;
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

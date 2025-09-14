@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학급 자리바꾸기 (4줄 5열)</title>
+    <style>
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .student-input {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .student-input input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 0 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .classroom {
+            margin-top: 30px;
+            background: #fff;
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .row-label {
+            font-weight: bold;
+            min-width: 40px;
+            color: #666;
+        }
+
+        .seats {
+            display: flex;
+            gap: 8px;
+            flex: 1;
+            margin-left: 20px;
+        }
+
+        .seat {
+            flex: 1;
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 8px;
+            padding: 12px 8px;
+            text-align: center;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #1976d2;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+
+        .seat.empty {
+            background: #f5f5f5;
+            border-color: #ccc;
+            color: #999;
+        }
+
+        .blackboard {
+            background: #2e7d32;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .info {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4caf50;
+        }
+
+        .shuffle-animation {
+            animation: shuffle 0.5s ease-in-out;
+        }
+
+        @keyframes shuffle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); background-color: #ffeb3b; }
+        }
+
+        .layout-info {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏫 학급 자리바꾸기 (4줄 5열)</h1>
+
+        <div class="layout-info">
+            📐 배치: 4줄 × 5열 = 총 20자리
+        </div>
+
+        <div class="info">
+            <strong>사용법:</strong> 학생 이름을 입력하고 "자리바꾸기" 버튼을 클릭하세요. (최대 20명)
+        </div>
+
+        <div class="input-section">
+            <h3>학생 이름 입력</h3>
+            <div class="student-input" id="studentInputs"></div>
+            <div class="controls">
+                <button onclick="addDefaultStudents()">기본 학생으로 채우기</button>
+                <button onclick="clearAllInputs()">모두 지우기</button>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button onclick="shuffleSeats()" id="shuffleBtn">🔄 자리바꾸기</button>
+            <button onclick="saveArrangement()" id="saveBtn" disabled>💾 배치 저장</button>
+        </div>
+
+        <div class="classroom" id="classroom" style="display: none;">
+            <div class="blackboard">칠판</div>
+            <div id="seatingChart"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentArrangement = [];
+        let students = [];
+        const ROWS = 4;
+        const COLS = 5;
+        const TOTAL_SEATS = 20;
+
+        function initializeInputs() {
+            const container = document.getElementById('studentInputs');
+            for (let i = 0; i < TOTAL_SEATS; i++) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = `학생 ${i + 1}`;
+                input.id = `student${i}`;
+                input.addEventListener('input', updateStudentList);
+                container.appendChild(input);
+            }
+        }
+
+        function updateStudentList() {
+            students = [];
+            for (let i = 0; i < TOTAL_SEATS; i++) {
+                const input = document.getElementById(`student${i}`);
+                if (input.value.trim()) {
+                    students.push(input.value.trim());
+                }
+            }
+        }
+
+        function addDefaultStudents() {
+            for (let i = 0; i < TOTAL_SEATS; i++) {
+                const input = document.getElementById(`student${i}`);
+                input.value = `학생${i + 1}`;
+            }
+            updateStudentList();
+        }
+
+        function clearAllInputs() {
+            for (let i = 0; i < TOTAL_SEATS; i++) {
+                const input = document.getElementById(`student${i}`);
+                input.value = '';
+            }
+            updateStudentList();
+            document.getElementById('classroom').style.display = 'none';
+            document.getElementById('saveBtn').disabled = true;
+        }
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function shuffleSeats() {
+            if (students.length === 0) {
+                alert('학생 이름을 먼저 입력해주세요!');
+                return;
+            }
+
+            const shuffledStudents = shuffleArray(students);
+            currentArrangement = [...shuffledStudents];
+
+            // 빈 자리 채우기
+            while (currentArrangement.length < TOTAL_SEATS) {
+                currentArrangement.push(null);
+            }
+
+            displayArrangement();
+            document.getElementById('saveBtn').disabled = false;
+        }
+
+        function displayArrangement() {
+            const classroom = document.getElementById('classroom');
+            const seatingChart = document.getElementById('seatingChart');
+
+            classroom.style.display = 'block';
+            seatingChart.innerHTML = '';
+
+            for (let row = 0; row < ROWS; row++) {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'row';
+
+                const rowLabel = document.createElement('div');
+                rowLabel.className = 'row-label';
+                rowLabel.textContent = `${row + 1}줄`;
+                rowDiv.appendChild(rowLabel);
+
+                const seatsDiv = document.createElement('div');
+                seatsDiv.className = 'seats';
+
+                for (let col = 0; col < COLS; col++) {
+                    const seatIndex = row * COLS + col;
+                    const seatDiv = document.createElement('div');
+                    seatDiv.className = 'seat';
+
+                    if (currentArrangement[seatIndex]) {
+                        seatDiv.textContent = currentArrangement[seatIndex];
+                        seatDiv.classList.add('shuffle-animation');
+                    } else {
+                        seatDiv.textContent = '빈자리';
+                        seatDiv.classList.add('empty');
+                    }
+
+                    seatsDiv.appendChild(seatDiv);
+                }
+
+                rowDiv.appendChild(seatsDiv);
+                seatingChart.appendChild(rowDiv);
+            }
+
+            // 애니메이션 제거
+            setTimeout(() => {
+                document.querySelectorAll('.seat').forEach(seat => {
+                    seat.classList.remove('shuffle-animation');
+                });
+            }, 500);
+        }
+
+        function saveArrangement() {
+            if (currentArrangement.length === 0) {
+                alert('먼저 자리바꾸기를 실행해주세요!');
+                return;
+            }
+
+            let content = '학급 자리 배치 (4줄 × 5열)\n';
+            content += '='.repeat(60) + '\n\n';
+
+            for (let row = 0; row < ROWS; row++) {
+                let rowText = `${row + 1}줄: `;
+                for (let col = 0; col < COLS; col++) {
+                    const seatIndex = row * COLS + col;
+                    const student = currentArrangement[seatIndex];
+                    if (col > 0) rowText += ' | ';
+                    rowText += (student || '빈자리').padEnd(8);
+                }
+                content += rowText + '\n';
+            }
+
+            content += '\n' + '='.repeat(60) + '\n';
+            content += `생성일시: ${new Date().toLocaleString('ko-KR')}\n`;
+            content += `총 학생 수: ${students.length}명`;
+
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'seat_arrangement_4x5.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            alert('자리 배치가 저장되었습니다!');
+        }
+
+        // 페이지 로드 시 초기화
+        window.onload = function() {
+            initializeInputs();
+        };
+    </script>
+</body>
+</html>

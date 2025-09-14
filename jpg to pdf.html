@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이미지를 PDF로 변환</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>이미지를 PDF로 변환</h1>
+            <p class="subtitle">JPG/PNG 이미지를 브라우저에서 바로 PDF로 변환하세요</p>
+        </header>
+
+        <main>
+            <!-- 파일 업로드 영역 -->
+            <section class="upload-section">
+                <div class="drop-zone" id="dropZone">
+                    <div class="drop-zone-content">
+                        <svg class="upload-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7,10 12,15 17,10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        <p class="drop-text">이미지를 드래그하거나 클릭하여 업로드하세요</p>
+                        <p class="file-types">JPG, JPEG, PNG 파일 지원</p>
+                    </div>
+                    <input type="file" id="fileInput" accept="image/jpeg,image/jpg,image/png" multiple aria-label="이미지 파일 선택">
+                </div>
+            </section>
+
+            <!-- 설정 옵션 -->
+            <section class="options-section" id="optionsSection" style="display: none;">
+                <h2>PDF 설정</h2>
+                <div class="options-grid">
+                    <!-- 페이지 크기 -->
+                    <div class="option-group">
+                        <label for="pageSize">페이지 크기</label>
+                        <select id="pageSize" aria-label="PDF 페이지 크기 선택">
+                            <option value="A4">A4 (210×297mm)</option>
+                            <option value="Letter">Letter (216×279mm)</option>
+                            <option value="Custom">사용자 정의</option>
+                        </select>
+                    </div>
+
+                    <!-- 사용자 정의 크기 -->
+                    <div class="option-group custom-size" id="customSizeGroup" style="display: none;">
+                        <label>사용자 정의 크기 (mm)</label>
+                        <div class="custom-size-inputs">
+                            <input type="number" id="customWidth" placeholder="너비" min="50" max="500" value="210" aria-label="페이지 너비">
+                            <span>×</span>
+                            <input type="number" id="customHeight" placeholder="높이" min="50" max="500" value="297" aria-label="페이지 높이">
+                        </div>
+                    </div>
+
+                    <!-- 페이지 방향 -->
+                    <div class="option-group">
+                        <label for="orientation">페이지 방향</label>
+                        <select id="orientation" aria-label="페이지 방향 선택">
+                            <option value="portrait">세로 (Portrait)</option>
+                            <option value="landscape">가로 (Landscape)</option>
+                        </select>
+                    </div>
+
+                    <!-- 이미지 맞춤 -->
+                    <div class="option-group">
+                        <label for="imageFit">이미지 맞춤</label>
+                        <select id="imageFit" aria-label="이미지 맞춤 방식 선택">
+                            <option value="contain">전체 보기 (여백 포함)</option>
+                            <option value="cover">페이지 채우기 (잘림 가능)</option>
+                        </select>
+                    </div>
+
+                    <!-- 이미지 품질 -->
+                    <div class="option-group">
+                        <label for="imageQuality">이미지 품질: <span id="qualityValue">80%</span></label>
+                        <input type="range" id="imageQuality" min="10" max="100" value="80" aria-label="이미지 품질 조절">
+                    </div>
+
+                    <!-- 출력 파일명 -->
+                    <div class="option-group">
+                        <label for="fileName">출력 파일명</label>
+                        <input type="text" id="fileName" value="converted-images" placeholder="파일명 입력" aria-label="PDF 파일명 입력">
+                    </div>
+                </div>
+            </section>
+
+            <!-- 이미지 미리보기 영역 -->
+            <section class="preview-section" id="previewSection" style="display: none;">
+                <div class="preview-header">
+                    <h2>선택된 이미지 <span id="imageCount">0</span>장</h2>
+                    <button class="clear-all-btn" id="clearAllBtn" aria-label="모든 이미지 제거">모두 제거</button>
+                </div>
+                <p class="preview-info">드래그로 순서를 변경할 수 있습니다 (최대 50장)</p>
+                <div class="image-grid" id="imageGrid"></div>
+            </section>
+
+            <!-- 변환 버튼 및 진행 상태 -->
+            <section class="convert-section" id="convertSection" style="display: none;">
+                <button class="convert-btn" id="convertBtn" aria-label="PDF로 변환 시작">PDF로 변환</button>
+                <div class="progress-container" id="progressContainer" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <p class="progress-text" id="progressText">변환 준비 중...</p>
+                </div>
+                <div class="download-container" id="downloadContainer" style="display: none;">
+                    <p class="success-message">✅ PDF 변환이 완료되었습니다!</p>
+                    <a href="#" id="downloadLink" class="download-link" download>PDF 다운로드</a>
+                </div>
+            </section>
+        </main>
+
+        <!-- 프라이버시 안내 -->
+        <footer class="privacy-notice">
+            <p>🔒 모든 파일은 브라우저에서만 처리되며 외부로 전송되지 않습니다.</p>
+        </footer>
+
+        <!-- 에러 메시지 모달 -->
+        <div class="modal" id="errorModal" style="display: none;" role="dialog" aria-labelledby="errorTitle" aria-describedby="errorMessage">
+            <div class="modal-content">
+                <h3 id="errorTitle">오류 발생</h3>
+                <p id="errorMessage"></p>
+                <button class="modal-close-btn" id="errorModalClose" aria-label="오류 메시지 닫기">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF 라이브러리 로드 -->
+    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
