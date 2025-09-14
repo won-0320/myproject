@@ -35,4 +35,10 @@
 
 ## 배포
 
-이 애플리케이션은 Vercel을 통해 배포됩니다.
+이 애플리케이션은 GitHub Pages를 통해 배포됩니다.
+
+**GitHub Pages URL**: https://won-0320.github.io/myproject/
+
+## 접속 방법
+
+위 URL로 직접 접속하면 로그인 없이 바로 사용할 수 있습니다.

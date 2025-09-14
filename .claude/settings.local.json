@@ -7,7 +7,15 @@
       "Bash(git config:*)",
       "Bash(git init:*)",
       "Bash(gh:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(node:*)",
+      "Bash(npm:*)",
+      "Bash(vercel:*)",
+      "Bash(git remote add:*)",
+      "Bash(git push:*)",
+      "Bash(git remote remove:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
