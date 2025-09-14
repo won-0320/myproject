@@ -39,10 +39,51 @@ thead th{background:#fafafa}
   <div class="grid">
     <section>
       <div class="card">
-        <h2>학생 입력</h2>
-        <div class="small">반/학생 선택 후 학생 비밀번호(없으면 새로 설정) 입력하고 5게임 결과를 저장하세요.</div>
+        <h2>학생 점수 입력</h2>
+        <div class="small">본인의 반, 번호, 이름과 비밀번호를 입력하고 5게임 결과를 저장하세요.</div>
 
-        <label>반 선택</label>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <div style="width:120px">
+            <label>반</label>
+            <select id="studentClassInput">
+              <option value="1">반1</option>
+              <option value="2">반2</option>
+              <option value="3">반3</option>
+              <option value="4">반4</option>
+              <option value="5">반5</option>
+              <option value="6">반6</option>
+              <option value="7">반7</option>
+              <option value="8">반8</option>
+            </select>
+          </div>
+          <div style="width:100px">
+            <label>번호</label>
+            <input id="studentNumberInput" type="number" min="1" max="50" placeholder="번호"/>
+          </div>
+          <div style="flex:1">
+            <label>이름</label>
+            <input id="studentNameInput" type="text" placeholder="이름 입력"/>
+          </div>
+        </div>
+
+        <div style="margin-top:10px">
+          <label>비밀번호 (첫 사용 시 새 비밀번호로 설정됩니다)</label>
+          <input id="studentPasswordInput" type="password" placeholder="비밀번호 입력"/>
+        </div>
+
+        <div id="gameInputsWrap" style="margin-top:10px"></div>
+
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button id="saveStudentResultBtn" class="btn">저장</button>
+          <button id="changeStudentPwBtn" class="btn-ghost">비밀번호 변경</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <h2>교사 관리</h2>
+        <div class="small">교사 전용 - 반별 학생수 조절 및 관리</div>
+
+        <label>관리할 반 선택</label>
         <select id="inputClassSelect"></select>
 
         <div style="display:flex;gap:8px;margin-top:8px">
@@ -51,8 +92,8 @@ thead th{background:#fafafa}
             <select id="studentSelectForInput"></select>
           </div>
           <div style="width:160px">
-            <label>학생 수 (1~20)</label>
-            <input id="studentCountInput" type="number" min="1" max="20"/>
+            <label>학생 수 (1~30)</label>
+            <input id="studentCountInput" type="number" min="1" max="30"/>
           </div>
         </div>
 
@@ -60,18 +101,6 @@ thead th{background:#fafafa}
           <button id="applyStudentCountBtn" class="btn">학생수 적용</button>
           <button id="autoFillNamesBtn" class="btn-ghost">자동 채우기</button>
           <button id="clearClassBtn" class="btn-ghost">반 초기화</button>
-        </div>
-
-        <div style="margin-top:10px">
-          <label>학생 비밀번호 (현재 비밀번호 입력 또는 새 비밀번호 입력)</label>
-          <input id="studentPasswordInput" type="password" placeholder="비밀번호 입력 (첫 사용 시 새 비밀번호로 설정)"/>
-        </div>
-
-        <div id="gameInputsWrap" style="margin-top:10px"></div>
-
-        <div style="display:flex;gap:8px;margin-top:10px">
-          <button id="saveStudentResultBtn" class="btn">저장</button>
-          <button id="changeStudentPwBtn" class="btn-ghost">비밀번호 변경</button>
           <button id="deleteStudentBtn" class="btn-ghost">학생 삭제</button>
         </div>
       </div>
@@ -220,7 +249,7 @@ function applyStudentCount(){
   const classIdx = Number(inputClassSelect.value || 0);
   let count = Number(studentCountInput.value) || 1;
   if(count < 1) count = 1;
-  if(count > 20) count = 20;
+  if(count > 30) count = 30;
   const students = classes[classIdx].students;
   if(count > students.length){
     for(let i=students.length;i<count;i++){
@@ -231,8 +260,8 @@ function applyStudentCount(){
   }
   saveLocal();
   populateStudentSelect(classIdx);
-  updateGameInputs(classIdx, 0);
   renderSummary();
+  alert('학생수가 조절되었습니다.');
 }
 
 /* 자동 채우기 */
@@ -277,7 +306,27 @@ function deleteStudent(){
   renderSummary();
 }
 
-/* ====== 게임 입력 UI ====== */
+/* ====== 게임 입력 UI (새로운 학생 입력용) ====== */
+function createGameInputs(){
+  gameInputsWrap.innerHTML = '';
+  for(let i=0;i<5;i++){
+    const lbl = document.createElement('label'); lbl.textContent = `게임 ${i+1}`;
+    const sel = document.createElement('select'); sel.id = `game${i}`;
+    ['승','패','불참'].forEach(opt=>{
+      const o = document.createElement('option'); o.value = opt; o.textContent = opt;
+      if(opt === '불참') o.selected = true;
+      sel.appendChild(o);
+    });
+    gameInputsWrap.appendChild(lbl);
+    gameInputsWrap.appendChild(sel);
+  }
+  const totalDiv = document.createElement('div'); totalDiv.id = 'studentTotalPreview'; totalDiv.style.marginTop = '8px';
+  gameInputsWrap.appendChild(totalDiv);
+  gameInputsWrap.querySelectorAll('select').forEach(s=>s.addEventListener('change', updateStudentTotalPreview));
+  updateStudentTotalPreview();
+}
+
+/* 교사 관리용 게임 입력 UI */
 function updateGameInputs(classIdx, stuIdx){
   const student = classes[classIdx].students[stuIdx];
   gameInputsWrap.innerHTML = '';
@@ -297,6 +346,7 @@ function updateGameInputs(classIdx, stuIdx){
   gameInputsWrap.querySelectorAll('select').forEach(s=>s.addEventListener('change', updateStudentTotalPreview));
   updateStudentTotalPreview();
 }
+
 function updateStudentTotalPreview(){
   const selects = gameInputsWrap.querySelectorAll('select');
   let total = 0;
@@ -305,23 +355,61 @@ function updateStudentTotalPreview(){
   if(div) div.textContent = `현재 합계: ${total}점`;
 }
 
-/* ====== 학생 결과 저장 (학생이 비밀번호 없으면 새 비밀번호로 설정) ====== */
+/* ====== 새로운 학생 결과 저장 (반/번호/이름 직접 입력) ====== */
 document.getElementById('saveStudentResultBtn').addEventListener('click', ()=>{
-  const classIdx = Number(inputClassSelect.value || 0);
-  const stuIdx = Number(studentSelectForInput.value || 0);
+  const classNum = Number(document.getElementById('studentClassInput').value || 1);
+  const studentNum = Number(document.getElementById('studentNumberInput').value || 0);
+  const studentName = (document.getElementById('studentNameInput').value || '').trim();
   const pwInput = (document.getElementById('studentPasswordInput').value || '').trim();
-  const student = classes[classIdx].students[stuIdx];
 
-  if(student.password === ''){
-    // 비밀번호가 없으면 첫 사용 시 새 비밀번호로 설정 요구
-    if(!pwInput){
-      alert('이 학생은 비밀번호가 설정되어 있지 않습니다. 먼저 비밀번호를 입력하여 설정하세요.');
-      return;
+  if(!studentNum || studentNum < 1){
+    alert('올바른 번호를 입력하세요.');
+    return;
+  }
+  if(!studentName){
+    alert('이름을 입력하세요.');
+    return;
+  }
+  if(!pwInput){
+    alert('비밀번호를 입력하세요.');
+    return;
+  }
+
+  // 해당 반 찾기
+  const classIdx = classNum - 1;
+  let student = null;
+  let studentIdx = -1;
+
+  // 같은 번호와 이름을 가진 학생 찾기
+  for(let i = 0; i < classes[classIdx].students.length; i++){
+    const s = classes[classIdx].students[i];
+    if(s.id === studentNum && s.name === studentName){
+      student = s;
+      studentIdx = i;
+      break;
     }
+  }
+
+  // 학생이 없으면 새로 생성
+  if(!student){
+    student = {
+      id: studentNum,
+      name: studentName,
+      results: ['불참','불참','불참','불참','불참'],
+      total: 0,
+      password: '',
+      lastSaved: null
+    };
+    classes[classIdx].students.push(student);
+    studentIdx = classes[classIdx].students.length - 1;
+  }
+
+  // 비밀번호 확인/설정
+  if(student.password === ''){
     student.password = pwInput;
-    alert(`${student.name} 학생의 비밀번호가 새로 설정되었습니다.`);
+    alert(`${studentName} 학생의 비밀번호가 새로 설정되었습니다.`);
   } else {
-    if(!teacherMode && pwInput !== student.password){
+    if(pwInput !== student.password){
       alert('비밀번호가 틀렸습니다.');
       return;
     }
@@ -336,25 +424,63 @@ document.getElementById('saveStudentResultBtn').addEventListener('click', ()=>{
   student.results = results;
   student.total = results.reduce((acc,v)=>acc + (SCORE[v]||0), 0);
   student.lastSaved = new Date().toISOString();
+
   saveLocal();
   renderSummary();
-  alert('저장되었습니다.');
+  alert('저장되었습니다!');
 });
 
 /* ====== 학생 비밀번호 변경 (학생 자신) ====== */
 document.getElementById('changeStudentPwBtn').addEventListener('click', ()=>{
-  const classIdx = Number(inputClassSelect.value || 0);
-  const stuIdx = Number(studentSelectForInput.value || 0);
+  const classNum = Number(document.getElementById('studentClassInput').value || 1);
+  const studentNum = Number(document.getElementById('studentNumberInput').value || 0);
+  const studentName = (document.getElementById('studentNameInput').value || '').trim();
   const current = (document.getElementById('studentPasswordInput').value || '').trim();
+
+  if(!studentNum || studentNum < 1){
+    alert('올바른 번호를 입력하세요.');
+    return;
+  }
+  if(!studentName){
+    alert('이름을 입력하세요.');
+    return;
+  }
+  if(!current){
+    alert('현재 비밀번호를 입력하세요.');
+    return;
+  }
+
   const newPw = prompt('새 비밀번호를 입력하세요 (공백이면 취소):');
   if(newPw === null) return;
-  const student = classes[classIdx].students[stuIdx];
+
+  // 해당 학생 찾기
+  const classIdx = classNum - 1;
+  let student = null;
+  for(let i = 0; i < classes[classIdx].students.length; i++){
+    const s = classes[classIdx].students[i];
+    if(s.id === studentNum && s.name === studentName){
+      student = s;
+      break;
+    }
+  }
+
+  if(!student){
+    alert('해당 학생을 찾을 수 없습니다. 먼저 저장을 통해 학생 정보를 등록하세요.');
+    return;
+  }
   if(student.password === ''){
     alert('비밀번호가 설정되어 있지 않습니다. 먼저 저장을 통해 비밀번호를 생성하세요.');
     return;
   }
-  if(current !== student.password && !teacherMode){ alert('현재 비밀번호가 올바르지 않습니다.'); return; }
-  if(!newPw.trim()){ alert('새 비밀번호가 비어 있습니다.'); return; }
+  if(current !== student.password && !teacherMode){
+    alert('현재 비밀번호가 올바르지 않습니다.');
+    return;
+  }
+  if(!newPw.trim()){
+    alert('새 비밀번호가 비어 있습니다.');
+    return;
+  }
+
   student.password = newPw.trim();
   saveLocal();
   alert('비밀번호가 변경되었습니다.');
@@ -585,7 +711,7 @@ document.getElementById('editStudentSelect').addEventListener('change', ()=> pop
 document.getElementById('customPwdCancelBtn').addEventListener('click', ()=> customPwdModal.style.display = 'none');
 
 /* 페이지 초기화 렌더 */
-function renderClassSelectors(){ inputClassSelect.innerHTML = classes.map((c,i)=>`<option value="${i}">${escapeHtml(c.name)}</option>`).join(''); const idx = Number(inputClassSelect.value || 0); populateStudentSelect(idx); studentCountInput.value = classes[idx].students.length; updateGameInputs(idx, Number(studentSelectForInput.value || 0)); populateEditSelectors(); }
+function renderClassSelectors(){ inputClassSelect.innerHTML = classes.map((c,i)=>`<option value="${i}">${escapeHtml(c.name)}</option>`).join(''); const idx = Number(inputClassSelect.value || 0); populateStudentSelect(idx); studentCountInput.value = classes[idx].students.length; createGameInputs(); updateGameInputs(idx, Number(studentSelectForInput.value || 0)); populateEditSelectors(); }
 renderClassSelectors();
 renderSummary();
 
