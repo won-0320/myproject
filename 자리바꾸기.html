@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>자리 바꾸기 프로그램</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .seat {
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 8px;
+    }
+    input {
+      width: 90%;
+      padding: 5px;
+      font-size: 14px;
+    }
+    #teacher-section {
+      margin-top: 20px;
+    }
+    #shuffle-btn {
+      display: none;
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+    #thinking-message {
+      margin-top: 10px;
+      font-weight: bold;
+      color: #0077cc;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>자리 바꾸기 프로그램</h2>
+
+  <div class="grid" id="seating-grid"></div>
+
+  <div id="teacher-section">
+    <input type="password" id="teacher-password" placeholder="교사 비밀번호 입력">
+    <button onclick="verifyTeacher()">교사 인증</button>
+    <br>
+    <button id="shuffle-btn" onclick="startShuffle()">자리 바꾸기</button>
+    <div id="thinking-message">생각 중입니다... 🤔</div>
+  </div>
+
+  <script>
+    const grid = document.getElementById('seating-grid');
+
+    // 자리 생성
+    for (let i = 0; i < 20; i++) {
+      const seat = document.createElement('div');
+      seat.className = 'seat';
+      seat.innerHTML = `
+        <div>자리 ${i + 1}</div>
+        <input type="text" id="student-${i}" placeholder="이름 입력">
+      `;
+      grid.appendChild(seat);
+    }
+
+    // 교사 인증
+    function verifyTeacher() {
+      const password = document.getElementById('teacher-password').value;
+      if (password === 'teacher123') {
+        document.getElementById('shuffle-btn').style.display = 'inline-block';
+        alert('교사 인증 완료! 자리 바꾸기 버튼이 활성화되었습니다.');
+      } else {
+        alert('비밀번호가 틀렸습니다.');
+      }
+    }
+
+    // 자리 바꾸기 시작 (5초 대기)
+    function startShuffle() {
+      const shuffleBtn = document.getElementById('shuffle-btn');
+      const thinkingMsg = document.getElementById('thinking-message');
+
+      shuffleBtn.disabled = true;
+      thinkingMsg.style.display = 'block';
+
+      setTimeout(() => {
+        shuffleSeats();
+        thinkingMsg.style.display = 'none';
+        shuffleBtn.disabled = false;
+      }, 5000); // 5초 대기
+    }
+
+    // 자리 바꾸기 실행
+    function shuffleSeats() {
+      const names = [];
+      for (let i = 0; i < 20; i++) {
+        const name = document.getElementById(`student-${i}`).value.trim();
+        names.push(name);
+      }
+
+      // 이름 섞기
+      for (let i = names.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [names[i], names[j]] = [names[j], names[i]];
+      }
+
+      // 섞은 이름 다시 입력
+      for (let i = 0; i < 20; i++) {
+        document.getElementById(`student-${i}`).value = names[i];
+      }
+    }
+  </script>
+
+</body>
+</html>
